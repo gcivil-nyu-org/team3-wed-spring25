@@ -1,6 +1,6 @@
-{% extends 'base.html' %} 
+{% extends 'base.html' %}
 
-{% block title %}All Listings{% endblock %} 
+{% block title %}All Listings{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
@@ -49,25 +49,23 @@
       <!-- Start Time -->
       <div class="col-md-2">
         <label for="start_time" class="form-label">Start Time</label>
-        <input 
-          type="time" 
-          class="form-control" 
-          id="start_time" 
-          name="start_time" 
-          value="{{ request.GET.start_time|default_if_none:'' }}"
-          placeholder="Earliest available time">
+        <select name="start_time" id="start_time" class="form-control">
+          <option value="">Any</option>
+          {% for time in half_hour_choices %}
+            <option value="{{ time }}" {% if request.GET.start_time == time %}selected{% endif %}>{{ time }}</option>
+          {% endfor %}
+        </select>
       </div>
 
       <!-- End Time -->
       <div class="col-md-2">
         <label for="end_time" class="form-label">End Time</label>
-        <input 
-          type="time" 
-          class="form-control" 
-          id="end_time" 
-          name="end_time" 
-          value="{{ request.GET.end_time|default_if_none:'' }}"
-          placeholder="Latest available time">
+        <select name="end_time" id="end_time" class="form-control">
+          <option value="">Any</option>
+          {% for time in half_hour_choices %}
+            <option value="{{ time }}" {% if request.GET.end_time == time %}selected{% endif %}>{{ time }}</option>
+          {% endfor %}
+        </select>
       </div>
 
       <!-- Buttons -->

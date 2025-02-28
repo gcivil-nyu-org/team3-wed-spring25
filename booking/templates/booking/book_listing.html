@@ -8,6 +8,16 @@
   <p>Location: {{ listing.location }}</p>
   <p>Hourly Rate: ${{ listing.rent_per_hour }}</p>
 
+  {% if form.errors %}
+    <div class="alert alert-danger">
+      <ul>
+        {% for field, errors in form.errors.items %}
+          <li>{{ errors|join:", " }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
   <form method="POST" class="mt-4">
     {% csrf_token %}
     {{ form.as_p }}
