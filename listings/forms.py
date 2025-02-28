@@ -10,6 +10,7 @@ HALF_HOUR_CHOICES = [
     for minute in (0, 30)
 ]
 
+
 class ListingForm(forms.ModelForm):
     # Use ChoiceFields for half-hour increments
     available_time_from = forms.ChoiceField(
@@ -54,8 +55,8 @@ class ListingForm(forms.ModelForm):
             errors.append("Rent per hour must be a positive number")
 
         # 3. Check time validation
-        time_from_str = cleaned_data.get("available_time_from")   # e.g. '08:00'
-        time_until_str = cleaned_data.get("available_time_until") # e.g. '12:30'
+        time_from_str = cleaned_data.get("available_time_from")  # e.g. '08:00'
+        time_until_str = cleaned_data.get("available_time_until")  # e.g. '12:30'
         if time_from_str and time_until_str:
             time_format = "%H:%M"
             time_from = datetime.datetime.strptime(time_from_str, time_format).time()

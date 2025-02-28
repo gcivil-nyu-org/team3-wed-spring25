@@ -10,6 +10,7 @@ HALF_HOUR_CHOICES = [
     for minute in (0, 30)
 ]
 
+
 class BookingForm(forms.ModelForm):
     # Use ChoiceFields for half-hour increments
     start_time = forms.ChoiceField(choices=HALF_HOUR_CHOICES, label="Start Time")
@@ -29,7 +30,7 @@ class BookingForm(forms.ModelForm):
 
         if listing:
             min_time = listing.available_time_from  # e.g., datetime.time(8, 0)
-            max_time = listing.available_time_until # e.g., datetime.time(18, 30)
+            max_time = listing.available_time_until  # e.g., datetime.time(18, 30)
 
             # Build valid half-hour choices within the listing's available time range.
             valid_choices = []
@@ -52,7 +53,9 @@ class BookingForm(forms.ModelForm):
             time_format = "%H:%M"
             try:
                 # Convert the string times to datetime.time objects
-                start_time = datetime.datetime.strptime(start_time_str, time_format).time()
+                start_time = datetime.datetime.strptime(
+                    start_time_str, time_format
+                ).time()
                 end_time = datetime.datetime.strptime(end_time_str, time_format).time()
             except ValueError:
                 errors.append("Invalid time format.")

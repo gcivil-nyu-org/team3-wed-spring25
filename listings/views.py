@@ -6,6 +6,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from .forms import ListingForm
 from .models import Listing
 
+
 def view_listings(request):
     all_listings = Listing.objects.all()
 
@@ -114,9 +115,13 @@ def create_listing(request):
         },
     )
 
+
 def manage_listings(request):
     owner_listings = Listing.objects.filter(user=request.user)
-    return render(request, "listings/manage_listings.html", {"listings": owner_listings})
+    return render(
+        request, "listings/manage_listings.html", {"listings": owner_listings}
+    )
+
 
 @login_required
 def edit_listing(request, listing_id):
@@ -130,6 +135,7 @@ def edit_listing(request, listing_id):
         form = ListingForm(instance=listing)
 
     return render(request, "listings/edit_listing.html", {"form": form})
+
 
 @login_required
 def delete_listing(request, listing_id):
