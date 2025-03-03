@@ -1,7 +1,7 @@
 dist: focal
 language: python
 python:
-  - "3.10"
+  - "3.11"
 
 # Only run this repo's builds.
 before_install:
@@ -32,15 +32,23 @@ script:
 # after_script:
 #   - coveralls
 
-before_deploy:
-  # Only deploy if this is a merge build, not a PR.
-  - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then echo "Pull request build, skipping deploy."; exit 0; fi
-  # Package the deployable artifact.
-  - zip -r deploy_package.zip . -x "*.git*" -x "**/__pycache__/*" -x "*.pyc" -x "venv/*"
+stages:
+  - name: test
+  - name: deploy_develop
+    if: branch = develop AND type = push
+  - name: deploy_main
+    if: branch = main AND type = push
+
 
 jobs:
   include:
-    - stage: "Deploy to Develop Environment"
+    - stage: test
+      script:
+        - black --check .
+        
+    - stage: deploy_develop
+      before_deploy:
+        - zip -r deploy_package.zip . -x "*.git*" -x "**/__pycache__/*" -x "*.pyc" -x "venv/*"
       deploy:
         provider: elasticbeanstalk
         access_key_id: "$AWS_ACCESS_KEY_ID_INT"
@@ -55,7 +63,9 @@ jobs:
         on:
           branch: develop
 
-    - stage: "Deploy to Production Environment"
+    - stage: deploy_main
+      before_deploy:
+        - zip -r deploy_package.zip . -x "*.git*" -x "**/__pycache__/*" -x "*.pyc" -x "venv/*"
       deploy:
         provider: elasticbeanstalk
         access_key_id: "$AWS_ACCESS_KEY_ID_MAIN"
