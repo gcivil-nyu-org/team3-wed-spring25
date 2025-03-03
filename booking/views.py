@@ -45,6 +45,7 @@ def book_listing(request, listing_id):
                     start_time=start_time,
                     end_time=end_time,
                     total_price=total_price,
+                    status="PENDING",
                 )
                 booking.save()
                 return redirect("my_bookings")
@@ -64,6 +65,26 @@ def cancel_booking(request, booking_id):
     booking = get_object_or_404(Booking, pk=booking_id, user=request.user)
     booking.delete()
     return redirect("my_bookings")
+
+
+@login_required
+def manage_booking(request, booking_id, action):
+    """
+    Allows listing owners to approve or decline a booking request.
+    """
+    booking = get_object_or_404(Booking, pk=booking_id)
+
+    # Ensure only the listing owner can approve/decline
+    if request.user != booking.listing.user:
+        return redirect("my_bookings")  # Redirect if unauthorized
+
+    if action == "approve":
+        booking.status = "APPROVED"
+    elif action == "decline":
+        booking.status = "DECLINED"
+    booking.save()
+
+    return redirect("manage_listings")
 
 
 @login_required

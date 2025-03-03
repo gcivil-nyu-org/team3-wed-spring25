@@ -118,6 +118,9 @@ def create_listing(request):
 
 def manage_listings(request):
     owner_listings = Listing.objects.filter(user=request.user)
+
+    for listing in owner_listings:
+        listing.pending_bookings = listing.booking_set.filter(status="PENDING")
     return render(
         request, "listings/manage_listings.html", {"listings": owner_listings}
     )

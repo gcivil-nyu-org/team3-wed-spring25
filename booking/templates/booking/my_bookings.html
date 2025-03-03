@@ -13,6 +13,15 @@
           <br> From: {{ booking.start_time|time:"g:i A" }} to {{ booking.end_time|time:"g:i A" }}
           <br> Total Price: ${{ booking.total_price }}
           <br>
+          <strong>Status: </strong>
+          {% if booking.status == "PENDING" %}
+            <span class="badge bg-warning text-dark">Pending</span>
+          {% elif booking.status == "APPROVED" %}
+            <span class="badge bg-success">Approved</span>
+          {% elif booking.status == "DECLINED" %}
+            <span class="badge bg-danger">Declined</span>
+          {% endif %}
+          <br>
           {% if booking.is_reviewed %}
             <span class="badge bg-success">Reviewed</span>
           {% else %}

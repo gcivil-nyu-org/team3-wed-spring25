@@ -24,6 +24,26 @@
                 </p>
                 <a href="{% url 'edit_listing' listing.id %}" class="btn btn-warning">Edit</a>
                 <a href="{% url 'delete_listing' listing.id %}" class="btn btn-danger">Delete</a>
+
+                <hr>
+
+                <h5>Pending Bookings</h5>
+
+                {% if listing.pending_bookings %}
+                    {% for booking in listing.pending_bookings %}
+                        <div class="border p-2 mb-2">
+                            <p><strong>Requested By:</strong> {{ booking.user.username }}</p>
+                            <p><strong>Date:</strong> {{ booking.booking_date|date:"M d, Y" }}</p>
+                            <p><strong>Time:</strong> {{ booking.start_time|time:"g:i A" }} - {{ booking.end_time|time:"g:i A" }}</p>
+                            <p><strong>Total Price:</strong> ${{ booking.total_price }}</p>
+                
+                            <a href="{% url 'manage_booking' booking.id 'approve' %}" class="btn btn-success btn-sm">Approve</a>
+                            <a href="{% url 'manage_booking' booking.id 'decline' %}" class="btn btn-danger btn-sm">Decline</a>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p>No pending bookings.</p>
+                {% endif %}
             </div>
         </div>
         {% empty %}

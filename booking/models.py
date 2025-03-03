@@ -4,6 +4,12 @@ from listings.models import Listing
 
 
 class Booking(models.Model):
+    STATUS_CHOICES = [
+        ("PENDING", "Pending"),
+        ("APPROVED", "Approved"),
+        ("DECLINED", "Declined"),
+    ]
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     listing = models.ForeignKey(Listing, on_delete=models.CASCADE)
 
@@ -19,6 +25,8 @@ class Booking(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="PENDING")
 
     def __str__(self):
         return f"{self.listing.title} booked by {self.user.username} on {self.booking_date}"

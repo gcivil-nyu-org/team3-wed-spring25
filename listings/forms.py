@@ -1,5 +1,6 @@
 # listings/forms.py
 import datetime
+from datetime import date
 from django import forms
 from .models import Listing, Review
 from .models import Review
@@ -39,6 +40,30 @@ class ListingForm(forms.ModelForm):
             "available_from": forms.DateInput(attrs={"type": "date"}),
             "available_until": forms.DateInput(attrs={"type": "date"}),
         }
+
+    def clean_available_from(self):
+        available_from = self.cleaned_data.get("available_from")
+        if available_from and available_from < date.today():
+            raise forms.ValidationError(
+                "The 'Available From' date cannot be in the past."
+            )
+        return available_from
+
+    def clean_available_until(self):
+        available_from = self.cleaned_data.get("available_from")
+        available_until = self.cleaned_data.get("available_until")
+
+        if available_until and available_until < date.today():
+            raise forms.ValidationError(
+                "The 'Available Until' date cannot be in the past."
+            )
+
+        if available_until and available_from and available_until < available_from:
+            raise forms.ValidationError(
+                "The 'Available Until' date cannot be before the 'Available From' date."
+            )
+
+        return available_until
 
     def clean(self):
         cleaned_data = super().clean()
