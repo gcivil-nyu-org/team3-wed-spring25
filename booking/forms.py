@@ -1,7 +1,7 @@
-# booking/forms.py
 import datetime
 from django import forms
 from .models import Booking
+from datetime import date  # Import date to compare with today
 
 # Generate half-hour choices for 00:00 -> 23:30
 HALF_HOUR_CHOICES = [
@@ -43,12 +43,19 @@ class BookingForm(forms.ModelForm):
             self.fields["start_time"].choices = valid_choices
             self.fields["end_time"].choices = valid_choices
 
+    def clean_booking_date(self):
+        booking_date = self.cleaned_data.get("booking_date")
+        if booking_date and booking_date < date.today():
+            raise forms.ValidationError("You cannot book a listing for a past date.")
+        return booking_date
+
     def clean(self):
         cleaned_data = super().clean()
         errors = []
 
         start_time_str = cleaned_data.get("start_time")
         end_time_str = cleaned_data.get("end_time")
+
         if start_time_str and end_time_str:
             time_format = "%H:%M"
             try:
