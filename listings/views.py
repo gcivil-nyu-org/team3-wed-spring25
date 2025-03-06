@@ -121,31 +121,6 @@ def view_listings(request):
     return render(request, "listings/view_listings.html", context)
 
 
-@login_required
-def create_listing(request):
-    if request.method == "POST":
-        form = ListingForm(request.POST)
-        if form.is_valid():
-            listing = form.save(commit=False)
-            listing.user = request.user
-            listing.save()
-            messages.success(request, "Listing created successfully!")
-            return redirect("view_listings")
-        else:
-            print(form.errors)
-            messages.error(request, "Please correct the errors below.")
-    else:
-        form = ListingForm()
-
-    return render(
-        request,
-        "listings/create_listing.html",
-        {
-            "form": form,
-        },
-    )
-
-
 def manage_listings(request):
     owner_listings = Listing.objects.filter(user=request.user)
 

@@ -17,20 +17,20 @@ services:
 
 install:
   - pip install -r requirements.txt
-  - pip install black
+  - pip install black flake8 coverage coveralls
 
 before_script:
   - psql -c 'CREATE DATABASE parkeasy_db;' -U postgres
   - python manage.py migrate
   #- python manage.py collectstatic --noinput
-  #^Implement this once we start hosting static objects
 
 script:
   - black --check .
-  # Add any additional checks or tests here.
+  - flake8 .
+  - coverage run manage.py test
   
-# after_script:
-#   - coveralls
+after_success:
+  - coveralls
 
 stages:
   - name: test
