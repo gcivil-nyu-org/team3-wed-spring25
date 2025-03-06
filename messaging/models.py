@@ -3,10 +3,16 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+
 class Conversation(models.Model):
     """A conversation between exactly two users."""
-    user1 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='conversations_initiated')
-    user2 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='conversations_received')
+
+    user1 = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="conversations_initiated"
+    )
+    user2 = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="conversations_received"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -22,8 +28,12 @@ class Conversation(models.Model):
         """
         user_ids = sorted([self.user1.id, self.user2.id])
         return f"chat_{user_ids[0]}_{user_ids[1]}"
+
+
 class ChatMessage(models.Model):
-    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name='messages')
+    conversation = models.ForeignKey(
+        Conversation, on_delete=models.CASCADE, related_name="messages"
+    )
     sender = models.ForeignKey(User, on_delete=models.CASCADE)
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)

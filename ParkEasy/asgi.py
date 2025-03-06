@@ -8,9 +8,11 @@ import messaging.routing
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ParkEasy.settings")
 django.setup()
 
-application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-    "websocket": AuthMiddlewareStack(
-        URLRouter(messaging.routing.websocket_urlpatterns)
-    ),
-})
+application = ProtocolTypeRouter(
+    {
+        "http": get_asgi_application(),
+        "websocket": AuthMiddlewareStack(
+            URLRouter(messaging.routing.websocket_urlpatterns)
+        ),
+    }
+)
