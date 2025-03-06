@@ -5,16 +5,12 @@
   <!-- LEFT COLUMN: List of users or existing conversations -->
   <div class="col-md-4" style="border-right: 1px solid #ccc; height: 80vh; overflow-y: auto;">
     <h4>Chats</h4>
-    <ul class="list-group">
-      <!-- Suppose we pass in all users or existing conversations -->
+    <ul class="list-group" id="usersList">
       {% for user in all_users %}
-        <!-- 
-           On click, we call a JS function loadConversation(user.id) that
-           sets up the conversation with that user.
-        -->
         <li 
-          class="list-group-item" 
-          style="cursor: pointer;" 
+          class="list-group-item"
+          data-user-id="{{ user.id }}"
+          style="cursor: pointer;"
           onclick="loadConversation('{{ user.id }}')"
         >
           {{ user.username }}
@@ -50,11 +46,10 @@
   let currentUserId = '{{ request.user.id }}'; // so we know who is sending
 
   function loadConversation(otherUserId) {
-    // In a real app, you'd do an AJAX call to your server to get
-    // or create a conversation with (request.user, otherUserId).
-    // The server returns a conversation_id and the conversation_name 
-    // e.g. "chat_3_5". For demonstration, let's assume we have an endpoint:
-    // /messaging/get_or_create_conversation/?other_user_id=XYZ
+    // Highlight the selected user on the left
+    highlightSelectedUser(otherUserId);
+
+    // Get or create a conversation with the clicked user
     fetch(`/messaging/get_or_create_conversation/?other_user_id=${otherUserId}`)
       .then(response => response.json())
       .then(data => {
@@ -69,13 +64,12 @@
         // Open new WebSocket
         const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
         chatSocket = new WebSocket(
-        wsScheme + "://" + window.location.host + "/ws/chat/" + currentConversationName + "/"
+          wsScheme + "://" + window.location.host + "/ws/chat/" + currentConversationName + "/"
         );
-
 
         chatSocket.onopen = function(e) {
           console.log("WebSocket connected.");
-          // Optionally, load existing messages from the server via AJAX
+          // Optionally, load existing messages from the server
           loadMessages(currentConversationId);
         };
 
@@ -91,8 +85,20 @@
       });
   }
 
+  function highlightSelectedUser(selectedUserId) {
+    // Remove 'active' from all list items
+    const listItems = document.querySelectorAll('#usersList .list-group-item');
+    listItems.forEach(li => li.classList.remove('active'));
+
+    // Add 'active' to the clicked user
+    const selectedLi = document.querySelector(`#usersList li[data-user-id="${selectedUserId}"]`);
+    if (selectedLi) {
+      selectedLi.classList.add('active');
+    }
+  }
+
   function loadMessages(conversationId) {
-    // Make an AJAX call to get the existing messages for that conversation
+    // Make an AJAX call to get existing messages for that conversation
     fetch(`/messaging/conversation_messages/${conversationId}/`)
       .then(response => response.json())
       .then(data => {
@@ -126,6 +132,7 @@
     const inputEl = document.getElementById('messageInput');
     const message = inputEl.value.trim();
     if (!message || !chatSocket) return;
+
     // Send over WebSocket
     chatSocket.send(JSON.stringify({
       'message': message,

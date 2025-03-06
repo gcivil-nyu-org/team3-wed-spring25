@@ -18,7 +18,51 @@
       <!-- Child templates will override this -->
       {% endblock %}
     </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;"></div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Notifications WebSocket Script -->
+    <script>
+      const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
+      const notificationSocket = new WebSocket(
+          wsScheme + '://' + window.location.host + '/ws/notifications/'
+      );
+    
+      notificationSocket.onmessage = function(e) {
+          const data = JSON.parse(e.data);
+          showNotification(data);
+      };
+    
+      function showNotification(data) {
+          const container = document.getElementById('toast-container');
+          if (!container) return;
+    
+          const toast = document.createElement('div');
+          toast.className = 'toast align-items-center text-bg-primary border-0';
+          toast.role = 'alert';
+          toast.setAttribute('aria-live', 'assertive');
+          toast.setAttribute('aria-atomic', 'true');
+    
+          // Create a clickable link wrapping the notification message.
+          toast.innerHTML = `<div class="d-flex">
+                  <div class="toast-body">
+                      New message from ${data.sender_username}: ${data.message}
+                      <a href="${data.link}" class="ms-2 text-white text-decoration-underline">View Messages</a>
+                  </div>
+                  <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+              </div>`;
+    
+          container.appendChild(toast);
+    
+          var bsToast = new bootstrap.Toast(toast, { delay: 5000 });
+          bsToast.show();
+      }
+    </script>
+    
+
     {% block scripts %}{% endblock %}
   </body>
 </html>
