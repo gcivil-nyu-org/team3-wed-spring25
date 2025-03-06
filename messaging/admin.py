@@ -1,10 +1,10 @@
-# Register your models here.
 from django.contrib import admin
-from .models import Message
+from .models import Conversation, ChatMessage
 
+@admin.register(Conversation)
+class ConversationAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user1', 'user2', 'created_at')
 
-@admin.register(Message)
-class MessageAdmin(admin.ModelAdmin):
-    list_display = ("id", "sender", "recipient", "subject", "created_at", "read")
-    list_filter = ("read", "created_at")
-    search_fields = ("sender__username", "recipient__username", "subject", "body")
+@admin.register(ChatMessage)
+class ChatMessageAdmin(admin.ModelAdmin):
+    list_display = ('id', 'conversation', 'sender', 'content', 'timestamp')

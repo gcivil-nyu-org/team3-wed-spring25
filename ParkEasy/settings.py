@@ -34,6 +34,11 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
 ]
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    }
+}
 
 
 # Application definition
@@ -50,6 +55,7 @@ INSTALLED_APPS = [
     "widget_tweaks",
     "booking",
     "messaging",
+    "channels",
 ]
 
 MIDDLEWARE = [
@@ -80,7 +86,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "ParkEasy.wsgi.application"
+ASGI_APPLICATION = "ParkEasy.asgi.application"
 
 
 # Database

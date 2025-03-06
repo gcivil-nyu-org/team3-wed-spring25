@@ -1,64 +1,54 @@
-from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse
+from .models import Conversation, ChatMessage
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.http import HttpResponseForbidden
-from .models import Message
-from .forms import MessageForm
+from django.shortcuts import get_object_or_404
+from django.shortcuts import render
+
+@login_required
+def get_or_create_conversation(request):
+    other_user_id = request.GET.get('other_user_id')
+    other_user = get_object_or_404(User, pk=other_user_id)
+
+    # Check if conversation already exists
+    conversation = (Conversation.objects.filter(
+        user1__in=[request.user, other_user],
+        user2__in=[request.user, other_user]
+    ).first())
+
+    if not conversation:
+        # Create a new one
+        conversation = Conversation.objects.create(user1=request.user, user2=other_user)
+
+    data = {
+        'conversation_id': conversation.id,
+        'conversation_name': conversation.get_conversation_name()
+    }
+    return JsonResponse(data)
+
+@login_required
+def conversation_messages(request, conversation_id):
+    conversation = get_object_or_404(Conversation, pk=conversation_id)
+    # Optional: verify that request.user is one of the participants
+    if request.user not in conversation.get_participants():
+        return JsonResponse({'error': 'Not allowed'}, status=403)
+
+    messages = conversation.messages.order_by('timestamp')
+    data = {
+        'messages': [
+            {
+                'sender_id': msg.sender.id,
+                'content': msg.content,
+                'timestamp': msg.timestamp.isoformat()
+            }
+            for msg in messages
+        ]
+    }
+    return JsonResponse(data)
 
 
 @login_required
-def inbox(request):
-    messages_inbox = Message.objects.filter(recipient=request.user).order_by(
-        "-created_at"
-    )
-    context = {"messages_inbox": messages_inbox}
-    return render(request, "messaging/inbox.html", context)
-
-
-@login_required
-def sent_messages(request):
-    messages_sent = Message.objects.filter(sender=request.user).order_by("-created_at")
-    context = {"messages_sent": messages_sent}
-    return render(request, "messaging/sent_messages.html", context)
-
-
-@login_required
-def compose_message(request):
-    if request.method == "POST":
-        form = MessageForm(request.POST)
-        if form.is_valid():
-            new_message = form.save(commit=False)
-            new_message.sender = request.user
-            new_message.save()
-            return redirect("inbox")
-    else:
-        form = MessageForm()
-    return render(request, "messaging/compose_message.html", {"form": form})
-
-
-@login_required
-def message_detail(request, message_id):
-    message = get_object_or_404(Message, pk=message_id)
-
-    # Only allow sender or recipient to view
-    if message.recipient != request.user and message.sender != request.user:
-        return HttpResponseForbidden("You are not allowed to view this message.")
-
-    # If the current user is the recipient, mark as read
-    if message.recipient == request.user and not message.read:
-        message.read = True
-        message.save()
-
-    return render(request, "messaging/message_detail.html", {"message": message})
-
-
-@login_required
-def delete_message(request, message_id):
-    message = get_object_or_404(Message, pk=message_id)
-
-    # Only allow sender or recipient to delete
-    if message.recipient != request.user and message.sender != request.user:
-        return HttpResponseForbidden("You are not allowed to delete this message.")
-
-    message.delete()
-    return redirect("inbox")
+def chat_home(request):
+    # Exclude the current user from the list
+    all_users = User.objects.exclude(id=request.user.id)
+    return render(request, 'messaging/chat.html', {'all_users': all_users})
