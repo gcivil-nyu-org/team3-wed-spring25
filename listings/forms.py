@@ -3,7 +3,7 @@ import pytz
 from django import forms
 from django.utils import timezone
 from .models import Listing, Review
-
+from .models import Review
 
 # Generate half-hour choices for 00:00 -> 23:30
 HALF_HOUR_CHOICES = [

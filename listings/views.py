@@ -1,10 +1,37 @@
 # listings/views.py
 from datetime import datetime
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
+
 from .forms import ListingForm
 from .models import Listing
+
+
+@login_required
+def create_listing(request):
+    if request.method == "POST":
+        form = ListingForm(request.POST)
+        if form.is_valid():
+            listing = form.save(commit=False)
+            listing.user = request.user
+            listing.save()
+            messages.success(request, "Listing created successfully!")
+            return redirect("view_listings")
+        else:
+            print(form.errors)
+            messages.error(request, "Please correct the errors below.")
+    else:
+        form = ListingForm()
+
+    return render(
+        request,
+        "listings/create_listing.html",
+        {
+            "form": form,
+        },
+    )
 
 
 def view_listings(request):
@@ -77,6 +104,9 @@ def view_listings(request):
                 all_listings = all_listings.none()
         except ValueError:
             pass
+        # add location name where it is location field without lat and lng
+    for listing in all_listings:
+        listing.location_name = listing.location.split("[")[0].strip()
 
     # Build half-hour choices for the dropdowns
     half_hour_choices = []
@@ -89,31 +119,6 @@ def view_listings(request):
         "half_hour_choices": half_hour_choices,
     }
     return render(request, "listings/view_listings.html", context)
-
-
-@login_required
-def create_listing(request):
-    if request.method == "POST":
-        form = ListingForm(request.POST)
-        if form.is_valid():
-            listing = form.save(commit=False)
-            listing.user = request.user
-            listing.save()
-            messages.success(request, "Listing created successfully!")
-            return redirect("view_listings")
-        else:
-            print(form.errors)
-            messages.error(request, "Please correct the errors below.")
-    else:
-        form = ListingForm()
-
-    return render(
-        request,
-        "listings/create_listing.html",
-        {
-            "form": form,
-        },
-    )
 
 
 def manage_listings(request):
