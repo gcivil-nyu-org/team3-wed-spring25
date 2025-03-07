@@ -3,7 +3,6 @@ import pytz
 from django import forms
 from django.utils import timezone
 from .models import Listing, Review
-from .models import Review
 
 # Generate half-hour choices for 00:00 -> 23:30
 HALF_HOUR_CHOICES = [
@@ -11,7 +10,7 @@ HALF_HOUR_CHOICES = [
     for hour in range(24)
     for minute in (0, 30)
 ]
-
+print("HALF_HOUR_CHOICES defined:", HALF_HOUR_CHOICES)
 
 class ListingForm(forms.ModelForm):
     # Use ChoiceFields for half-hour increments
