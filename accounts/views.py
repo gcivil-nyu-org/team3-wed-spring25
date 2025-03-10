@@ -56,9 +56,9 @@ def verify(request):
                 },
             )
         else:
-            context["error_message"] = (
-                "Incorrect answer, verification failed. Please try again."
-            )
+            context[
+                "error_message"
+            ] = "Incorrect answer, verification failed. Please try again."
 
     # If GET or POST with errors, render the form as normal
     return render(request, "accounts/verify.html", context)

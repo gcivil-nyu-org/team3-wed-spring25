@@ -1,8 +1,11 @@
-from django.test import TestCase
-from django.contrib.auth.models import User
-from ..models import Listing, Review
-from booking.models import Booking
 from datetime import date, time
+
+from django.contrib.auth.models import User
+from django.test import TestCase
+
+from booking.models import Booking
+
+from ..models import Listing, Review
 
 
 class ListingModelTest(TestCase):
@@ -32,6 +35,51 @@ class ListingModelTest(TestCase):
 
     def test_listing_str(self):
         self.assertEqual(str(self.listing), "Test Listing - 123 Test St")
+
+    def test_average_rating_with_no_reviews(self):
+        """Test that average_rating returns None when there are no reviews"""
+        self.assertIsNone(self.listing.average_rating())
+
+    def test_average_rating_with_reviews(self):
+        """Test average_rating calculation with multiple reviews"""
+        # Create first booking
+        booking1 = Booking.objects.create(
+            user=self.user,
+            listing=self.listing,
+            booking_date=date(2023, 6, 15),
+            start_time=time(9, 0),
+            end_time=time(10, 0),
+            total_price=10.00,
+        )
+
+        # Create another booking for second review
+        booking2 = Booking.objects.create(
+            user=self.user,
+            listing=self.listing,
+            booking_date=date(2023, 6, 16),
+            start_time=time(11, 0),
+            end_time=time(12, 0),
+            total_price=10.00,
+        )
+
+        # Create reviews with different ratings
+        Review.objects.create(
+            booking=booking1,
+            listing=self.listing,
+            user=self.user,
+            rating=4,
+            comment="Good place!",
+        )
+        Review.objects.create(
+            booking=booking2,
+            listing=self.listing,
+            user=self.user,
+            rating=5,
+            comment="Excellent place!",
+        )
+
+        # Test the average calculation
+        self.assertEqual(self.listing.average_rating(), 4.5)
 
 
 class ReviewModelTest(TestCase):

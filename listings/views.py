@@ -118,9 +118,11 @@ def view_listings(request):
                 all_listings = all_listings.none()
         except ValueError:
             pass
-        # add location name where it is location field without lat and lng
+
+    # Add average rating to each listing
     for listing in all_listings:
         listing.location_name = listing.location.split("[")[0].strip()
+        listing.avg_rating = listing.average_rating()
 
     # Build half-hour choices for the dropdowns
     half_hour_choices = []

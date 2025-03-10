@@ -52,11 +52,16 @@ document.addEventListener("DOMContentLoaded", function () {
         const price = listing.querySelector(
           ".card-text:nth-child(2)"
         ).textContent;
+        const rating = listing.dataset.rating;
+        const ratingHtml = rating
+          ? `<br><strong>Average Review:</strong> ${parseFloat(rating).toFixed(1)} / 5`
+          : '<br><span class="text-muted">No reviews yet</span>';
 
         const popupContent = `
           <strong>${title}</strong><br>
           ${location.location_name}<br>
-          ${price}<br>
+          $${price}/hour
+          ${ratingHtml}
         `;
         marker.bindPopup(popupContent);
       });

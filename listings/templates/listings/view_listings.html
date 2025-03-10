@@ -121,9 +121,6 @@
     </div>
   </form>
 
-  
-
-
   <!-- List View print -->
   <div
     id="list-view"
@@ -150,6 +147,13 @@
           {{ listing.available_time_until|time:"g:i A" }}
         </p>
         <p class="card-text">{{ listing.description }}</p>
+        {% if listing.avg_rating %}
+        <p class="card-text">
+          <strong>Average Rating:</strong> {{ listing.avg_rating|floatformat:1 }} / 5
+        </p>
+        {% else %}
+        <p class="card-text text-muted">No ratings yet</p>
+        {% endif %}
         <p class="card-text">
           <small class="text-muted"
             >Listed by: {{ listing.user.username }}</small
@@ -190,4 +194,3 @@
 ></script>
 <script src="{% static 'listings/js/view_listings.js' %}"></script>
 {% endblock %}
-
