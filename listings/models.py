@@ -5,7 +5,7 @@ from django.db import models
 from django.db.models import Max, Min
 from django.utils import timezone
 
-from .utilities import simplify_location
+from .utils import simplify_location
 
 EV_CHARGER_LEVELS = [
     ("L1", "Level 1 (120V)"),

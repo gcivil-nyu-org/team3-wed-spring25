@@ -52,209 +52,308 @@
     </div>
   </div>
 
-    <!-- Filter Form -->
-    <form method="GET" action="{% url 'view_listings' %}" class="filter-box">
-      <!-- Add this hidden field -->
-      <input type="hidden" name="view_mode" id="view_mode_input" value="{{ request.GET.view_mode|default:'list' }}">
-      
-      <div class="row align-items-end g-3 mb-3">
-        <!-- Max Price - keep at col-md-2 -->
-        <div class="col-md-2">
-          <label for="max_price" class="form-label">Max Price ($/hr)</label>
-          <input type="number" step="0.01" class="form-control" id="max_price" name="max_price"
-                 value="{{ request.GET.max_price|default_if_none:'' }}" placeholder="Enter max price">
-        </div>
-        
-        <!-- Filter Mode Selection - reduce width from col-md-8 to col-md-4 -->
-        <div class="col-md-4">
-          <label class="form-label">Filter Mode</label>
-          <div>
-            <div class="form-check form-check-inline">
-              <input class="form-check-input" type="radio" name="filter_type" id="filter_single" value="single"
-                     {% if filter_type == "single" or not filter_type %}checked{% endif %}>
-              <label class="form-check-label" for="filter_single">Single Interval</label>
-            </div>
-            <div class="form-check form-check-inline">
-              <input class="form-check-input" type="radio" name="filter_type" id="filter_recurring" value="recurring"
-                     {% if filter_type == "recurring" %}checked{% endif %}>
-              <label class="form-check-label" for="filter_recurring">Recurring</label>
-            </div>
-          </div>
-        </div>
-        
-        <div class="col-md-6 text-md-end">
-          <button type="submit" class="btn btn-primary">
-            <i class="fas fa-filter me-1"></i> Filter
+  <!-- Location Search Section -->
+  <form method="GET" action="{% url 'view_listings' %}" class="filter-box">
+    <!-- Primary Search Row -->
+    <div class="row mb-3">
+      <div class="col-md-8">
+        <label class="form-label">
+          <i class="fas fa-map-marker-alt me-1"></i> Search by Location
+        </label>
+        <div class="input-group">
+          <input type="text" 
+                 id="location-search" 
+                 class="form-control" 
+                 placeholder="Search for address or landmark"
+                 value="{{ request.GET.location|default:'' }}"/>
+          <button class="btn btn-outline-secondary" id="search-location" type="button">
+            <i class="fas fa-search me-1"></i> Find Location
           </button>
-          <a href="{% url 'view_listings' %}" class="btn btn-secondary ms-2">
-            <i class="fas fa-times me-1"></i> Clear
-          </a>
+          <button class="btn btn-outline-secondary" type="button" id="toggle-map">
+            <i class="fas fa-map me-1"></i> Toggle Map to Select Location
+          </button>
         </div>
+        <div class="mt-2 text-muted small" id="coordinates-display" {% if not search_lat or not search_lng %}style="display: none;"{% endif %}>
+          <i class="fas fa-crosshairs me-1"></i>
+          Selected coordinates: 
+          <span id="lat-display">{{ search_lat|default:'-' }}</span>, 
+          <span id="lng-display">{{ search_lng|default:'-' }}</span>
+        </div>
+        <input type="hidden" name="lat" id="search-lat" value="{{ search_lat|default:'' }}">
+        <input type="hidden" name="lng" id="search-lng" value="{{ search_lng|default:'' }}">
       </div>
-      
-      <hr class="my-2">
-      
-      <!-- Single Interval Filter Section -->
-      <div id="single-filter" class="mt-3" {% if filter_type != "single" %}style="display:none;"{% endif %}>
-        <h6 class="filter-section-title"><i class="fas fa-calendar-alt me-2"></i>Select Date and Time</h6>
-        <div class="row g-2">
-          <div class="col-md-3">
-            <label for="start_date" class="form-label small">Start Date</label>
-            <input type="date" class="form-control" id="start_date" name="start_date"
-                   value="{{ request.GET.start_date|default_if_none:'' }}">
-          </div>
-          <div class="col-md-3">
-            <label for="end_date" class="form-label small">End Date</label>
-            <input type="date" class="form-control" id="end_date" name="end_date"
-                   value="{{ request.GET.end_date|default_if_none:'' }}">
-          </div>
-          <div class="col-md-3">
-            <label for="start_time" class="form-label small">Start Time</label>
-            <select class="form-select" id="start_time" name="start_time">
-              <option value="">Select start time</option>
-              {% for value, label in half_hour_choices %}
-                <option value="{{ value }}" {% if request.GET.start_time == value %}selected{% endif %}>{{ label }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="col-md-3">
-            <label for="end_time" class="form-label small">End Time</label>
-            <select class="form-select" id="end_time" name="end_time">
-              <option value="">Select end time</option>
-              {% for value, label in half_hour_choices %}
-                <option value="{{ value }}" {% if request.GET.end_time == value %}selected{% endif %}>{{ label }}</option>
-              {% endfor %}
-            </select>
-          </div>
+
+      <div class="col-md-4">
+        <div class="form-check mb-2">
+          <input class="form-check-input" 
+                 type="checkbox" 
+                 id="enable-radius" 
+                 {% if radius %}checked{% endif %}>
+          <label class="form-check-label" for="enable-radius">
+            <i class="fas fa-circle-notch me-1"></i> Filter by radius
+          </label>
         </div>
+        <div id="radius-input-group" 
+             class="input-group" 
+             {% if not radius %}style="display: none;"{% endif %}>
+          <input type="number" 
+                 name="radius" 
+                 id="radius-input"
+                 class="form-control" 
+                 value="{{ radius|default:'' }}" 
+                 placeholder="km"
+                 min="1" 
+                 max="100">
+          <span class="input-group-text">km</span>
+        </div>
+        <small class="text-muted" 
+               id="radius-hint" 
+               {% if radius %}style="display: none;"{% endif %}>
+          Results will be sorted by distance
+        </small>
       </div>
-      
-      <!-- Recurring Filter Section -->
-      <div id="recurring-filter" class="mt-3" {% if filter_type != "recurring" %}style="display:none;"{% endif %}>
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <h6 class="filter-section-title mb-0"><i class="fas fa-calendar-alt me-2"></i>Recurring Booking Pattern</h6>
-        </div>
-        
-        <!-- First line: Start date, Start time, End time, Overnight checkbox -->
-        <div class="row g-2 mb-3">
-          <!-- Start Date -->
+    </div>
+
+    <!-- Map Container -->
+    <div class="map-container mb-4" id="search-map-container" style="display: none;">
+      <div id="search-map" style="height: 300px;"></div>
+    </div>
+
+    <!-- Additional Filters Toggle -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <button
+        class="btn btn-sm btn-outline-secondary"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#additionalFilters"
+        {% if has_active_filters %}
+        aria-expanded="true"
+        {% else %}
+        aria-expanded="false"
+        {% endif %}>
+        <i class="fas fa-sliders-h me-1"></i> Additional Filters
+      </button>
+      <a href="{% url 'view_listings' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-times me-1"></i> Clear All Filters
+      </a>
+    </div>
+
+    <!-- Collapsible Additional Filters -->
+    <div class="collapse {% if has_active_filters %}show{% endif %}" 
+         id="additionalFilters">
+      <div class="card card-body mb-3">
+        <!-- Price and EV Charger Row -->
+        <div class="row g-3 mb-3">
+          <!-- Max Price -->
           <div class="col-md-3">
-            <label for="recurring_start_date" class="form-label small">Start Date*</label>
-            <input type="date" class="form-control" id="recurring_start_date" name="recurring_start_date" 
-                   value="{{ request.GET.recurring_start_date|default_if_none:'' }}" required>
+            <label for="max_price" class="form-label">
+              <i class="fas fa-tag me-1"></i> Max Price ($/hr)
+            </label>
+            <input type="number" 
+                   step="0.01" 
+                   class="form-control" 
+                   id="max_price" 
+                   name="max_price"
+                   value="{{ request.GET.max_price|default_if_none:'' }}" 
+                   placeholder="Enter max price">
           </div>
-          
-          <!-- Start Time -->
+
+          <!-- EV Charger Checkbox -->
           <div class="col-md-3">
-            <label for="recurring_start_time" class="form-label small">Start Time*</label>
-            <select class="form-select" id="recurring_start_time" name="recurring_start_time" required>
-              <option value="">Select time</option>
-              {% for value, label in half_hour_choices %}
-                <option value="{{ value }}" {% if request.GET.recurring_start_time == value %}selected{% endif %}>{{ label }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          
-          <!-- End Time -->
-          <div class="col-md-3">
-            <label for="recurring_end_time" class="form-label small">End Time*</label>
-            <select class="form-select" id="recurring_end_time" name="recurring_end_time" required>
-              <option value="">Select time</option>
-              {% for value, label in half_hour_choices %}
-                <option value="{{ value }}" {% if request.GET.recurring_end_time == value %}selected{% endif %}>{{ label }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          
-          <!-- Overnight checkbox -->
-          <div class="col-md-3">
-            <label class="form-label small d-block">&nbsp;</label> <!-- Empty label for alignment -->
-            <div class="form-check mt-2">
-              <input class="form-check-input" type="checkbox" id="recurring_overnight" name="recurring_overnight" 
-                     {% if request.GET.recurring_overnight %}checked{% endif %}>
-              <label class="form-check-label" for="recurring_overnight">
-                <i class="fas fa-moon me-1"></i> Overnight booking
+            <label class="form-label">
+              <i class="fas fa-charging-station me-1"></i> EV Charging
+            </label>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="ev_charger" name="has_ev_charger" 
+                     {% if request.GET.has_ev_charger == 'on' %}checked{% endif %}>
+              <label class="form-check-label" for="ev_charger">
+                Has EV Charger
               </label>
             </div>
           </div>
+
+          <!-- Charger Level -->
+          <div class="col-md-3 ev-charger-container">
+            <label class="form-label">
+              <i class="fas fa-bolt me-1"></i> Charger Level
+            </label>
+            <select class="form-select" name="charger_level" id="charger_level">
+              <option value="">Any Level</option>
+              {% for value, label in charger_level_choices %}
+                <option value="{{ value }}" {% if request.GET.charger_level == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Connector Type -->
+          <div class="col-md-3 ev-charger-container">
+            <label class="form-label">
+              <i class="fas fa-plug me-1"></i> Connector Type
+            </label>
+            <select class="form-select" name="connector_type" id="connector_type">
+              <option value="">Any Type</option>
+              {% for value, label in connector_type_choices %}
+                <option value="{{ value }}" {% if request.GET.connector_type == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
         </div>
-        
-        <!-- Second line: Pattern selection and conditional fields -->
-        <div class="row g-2">
-          <div class="col-12">
-            <div class="d-flex align-items-center">
-              <!-- Pattern Label -->
-              <label class="form-label small me-3 mb-0" style="min-width: 120px;">Recurring Pattern*</label>
-              
-              <!-- Daily Pattern -->
-              <div class="form-check form-check-inline me-2">
-                <input class="form-check-input" type="radio" name="recurring_pattern" id="pattern_daily" value="daily" 
-                       {% if request.GET.recurring_pattern == "daily" or not request.GET.recurring_pattern %}checked{% endif %}>
-                <label class="form-check-label" for="pattern_daily">Daily</label>
+
+        <!-- Booking Type Row -->
+        <div class="row g-3 mb-3">
+          <div class="col-md-12">
+            <label class="form-label">
+              <i class="fas fa-calendar me-1"></i> Booking Type
+            </label>
+            <div class="btn-group w-100" role="group">
+              <input type="radio" class="btn-check" name="filter_type" id="filter_single" value="single"
+                     {% if filter_type == "single" or not filter_type %}checked{% endif %}>
+              <label class="btn btn-outline-primary" for="filter_single">Single Booking</label>
+
+              <input type="radio" class="btn-check" name="filter_type" id="filter_recurring" value="recurring"
+                     {% if filter_type == "recurring" %}checked{% endif %}>
+              <label class="btn btn-outline-primary" for="filter_recurring">Recurring Booking</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Single Booking Options -->
+        <div id="single-filter" class="booking-options" {% if filter_type != "single" %}style="display:none;"{% endif %}>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label small">Date Range</label>
+              <div class="input-group">
+                <input type="date" class="form-control" name="start_date" value="{{ start_date }}">
+                <span class="input-group-text">to</span>
+                <input type="date" class="form-control" name="end_date" value="{{ end_date }}">
               </div>
-              
-              <!-- Daily Pattern Fields -->
-              <div id="daily-pattern-fields" class="me-4" {% if request.GET.recurring_pattern == "weekly" %}style="display:none;"{% endif %}>
-                <div class="input-group input-group-sm">
-                  <span class="input-group-text">Until</span>
-                  <input type="date" class="form-control" id="recurring_end_date" name="recurring_end_date"
-                         value="{{ request.GET.recurring_end_date|default_if_none:'' }}" 
-                         required data-required="true">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small">Time Range</label>
+              <div class="input-group">
+                <select class="form-select" name="start_time">
+                  <option value="">Start Time</option>
+                  {% for value, label in half_hour_choices %}
+                    <option value="{{ value }}" {% if start_time == value %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+                <span class="input-group-text">to</span>
+                <select class="form-select" name="end_time">
+                  <option value="">End Time</option>
+                  {% for value, label in half_hour_choices %}
+                    <option value="{{ value }}" {% if end_time == value %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recurring Booking Options -->
+        <div id="recurring-filter" class="booking-options" {% if filter_type != "recurring" %}style="display:none;"{% endif %}>
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="filter-section-title mb-0"><i class="fas fa-calendar-alt me-2"></i>Recurring Booking Pattern</h6>
+          </div>
+          
+          <!-- First line: Start date, Start time, End time, Overnight checkbox -->
+          <div class="row g-2 mb-3">
+            <!-- Start Date -->
+            <div class="col-md-3">
+              <label for="recurring_start_date" class="form-label small">Start Date*</label>
+              <input type="date" class="form-control" id="recurring_start_date" name="recurring_start_date" 
+                     value="{{ request.GET.recurring_start_date|default_if_none:'' }}" required>
+            </div>
+            
+            <!-- Start Time -->
+            <div class="col-md-3">
+              <label for="recurring_start_time" class="form-label small">Start Time*</label>
+              <select class="form-select" id="recurring_start_time" name="recurring_start_time" required>
+                <option value="">Select time</option>
+                {% for value, label in half_hour_choices %}
+                  <option value="{{ value }}" {% if request.GET.recurring_start_time == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            
+            <!-- End Time -->
+            <div class="col-md-3">
+              <label for="recurring_end_time" class="form-label small">End Time*</label>
+              <select class="form-select" id="recurring_end_time" name="recurring_end_time" required>
+                <option value="">Select time</option>
+                {% for value, label in half_hour_choices %}
+                  <option value="{{ value }}" {% if request.GET.recurring_end_time == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            
+            <!-- Overnight checkbox -->
+            <div class="col-md-3">
+              <label class="form-label small d-block">&nbsp;</label> <!-- Empty label for alignment -->
+              <div class="form-check mt-2">
+                <input class="form-check-input" type="checkbox" id="recurring_overnight" name="recurring_overnight" 
+                       {% if request.GET.recurring_overnight %}checked{% endif %}>
+                <label class="form-check-label" for="recurring_overnight">
+                  <i class="fas fa-moon me-1"></i> Overnight booking
+                </label>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Second line: Pattern selection and conditional fields -->
+          <div class="row g-2">
+            <div class="col-12">
+              <div class="d-flex align-items-center">
+                <!-- Pattern Label -->
+                <label class="form-label small me-3 mb-0" style="min-width: 120px;">Recurring Pattern*</label>
+                
+                <!-- Daily Pattern -->
+                <div class="form-check form-check-inline me-2">
+                  <input class="form-check-input" type="radio" name="recurring_pattern" id="pattern_daily" value="daily" 
+                         {% if request.GET.recurring_pattern == "daily" or not request.GET.recurring_pattern %}checked{% endif %}>
+                  <label class="form-check-label" for="pattern_daily">Daily</label>
                 </div>
-              </div>
-              
-              <!-- Weekly Pattern -->
-              <div class="form-check form-check-inline me-2">
-                <input class="form-check-input" type="radio" name="recurring_pattern" id="pattern_weekly" value="weekly"
-                       {% if request.GET.recurring_pattern == "weekly" %}checked{% endif %}>
-                <label class="form-check-label" for="pattern_weekly">Weekly</label>
-              </div>
-              
-              <!-- Weekly Pattern Fields -->
-              <div id="weekly-pattern-fields" {% if request.GET.recurring_pattern != "weekly" %}style="display:none;"{% endif %}>
-                <div class="input-group input-group-sm">
-                  <span class="input-group-text">For</span>
-                  <input type="number" class="form-control" id="recurring_weeks" name="recurring_weeks" min="1" max="52"
-                         value="{{ request.GET.recurring_weeks|default:'4' }}"
-                         required data-required="true" style="width: 70px;">
-                  <span class="input-group-text">weeks</span>
+                
+                <!-- Daily Pattern Fields -->
+                <div id="daily-pattern-fields" class="me-4" {% if request.GET.recurring_pattern == "weekly" %}style="display:none;"{% endif %}>
+                  <div class="input-group input-group-sm">
+                    <span class="input-group-text">Until</span>
+                    <input type="date" class="form-control" id="recurring_end_date" name="recurring_end_date"
+                           value="{{ request.GET.recurring_end_date|default_if_none:'' }}" 
+                           required data-required="true">
+                  </div>
+                </div>
+                
+                <!-- Weekly Pattern -->
+                <div class="form-check form-check-inline me-2">
+                  <input class="form-check-input" type="radio" name="recurring_pattern" id="pattern_weekly" value="weekly"
+                         {% if request.GET.recurring_pattern == "weekly" %}checked{% endif %}>
+                  <label class="form-check-label" for="pattern_weekly">Weekly</label>
+                </div>
+                
+                <!-- Weekly Pattern Fields -->
+                <div id="weekly-pattern-fields" {% if request.GET.recurring_pattern != "weekly" %}style="display:none;"{% endif %}>
+                  <div class="input-group input-group-sm">
+                    <span class="input-group-text">For</span>
+                    <input type="number" class="form-control" id="recurring_weeks" name="recurring_weeks" min="1" max="52"
+                           value="{{ request.GET.recurring_weeks|default:'4' }}"
+                           required data-required="true" style="width: 70px;">
+                    <span class="input-group-text">weeks</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-      
-      <div class="row mb-3">
-        <div class="col-12 col-md-4">
-          <div class="form-check">
-            <input class="form-check-input" type="checkbox" id="ev_charger" name="has_ev_charger" 
-                   {% if request.GET.has_ev_charger == 'on' %}checked{% endif %}>
-            <label class="form-check-label" for="ev_charger">
-              <i class="fas fa-charging-station text-primary me-1"></i> Has EV Charger
-            </label>
-          </div>
-        </div>
-        
-        <div class="col-12 col-md-4 ev-charger-container">
-          <select class="form-select" name="charger_level" id="charger_level">
-            <option value="">Any Charger Level</option>
-            {% for value, label in charger_level_choices %}
-              <option value="{{ value }}" {% if request.GET.charger_level == value %}selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        
-        <div class="col-12 col-md-4 ev-charger-container">
-          <select class="form-select" name="connector_type" id="connector_type">
-            <option value="">Any Connector Type</option>
-            {% for value, label in connector_type_choices %}
-              <option value="{{ value }}" {% if request.GET.connector_type == value %}selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-          </select>
-        </div>
-      </div>
-    </form>
+    </div>
+
+    <!-- Search Button -->
+    <div class="d-flex justify-content-center">
+      <button type="submit" class="btn btn-primary w-100">
+        <i class="fas fa-search me-1"></i> Search
+      </button>
+    </div>
+  </form>
 
   <!-- List View -->
   <div id="list-view" class="view-container listings-container p-3 border rounded active-view">
@@ -274,5 +373,7 @@
   integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
   crossorigin=""
 ></script>
+<!-- NYC Map Bounds -->
+<script src="{% static 'listings/js/map_utils.js' %}"></script>
 <script src="{% static 'listings/js/view_listings.js' %}"></script>
 {% endblock %}

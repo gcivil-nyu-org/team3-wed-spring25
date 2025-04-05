@@ -1,18 +1,20 @@
 from datetime import datetime, time, timedelta
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404, redirect, render
 from django.core.paginator import Paginator
 from django.db import models
 from django.forms import inlineformset_factory
+from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import (
     ListingForm,
+    ListingSlotForm,
     ListingSlotFormSet,
     validate_non_overlapping_slots,
-    ListingSlotForm,
 )
-from .models import Listing, ListingSlot, EV_CHARGER_LEVELS, EV_CONNECTOR_TYPES
+from .models import EV_CHARGER_LEVELS, EV_CONNECTOR_TYPES, Listing, ListingSlot
+from .utils import calculate_distance, extract_coordinates, has_active_filters
 
 # Define an inline formset for editing (extra=0)
 ListingSlotFormSetEdit = inlineformset_factory(
@@ -446,12 +448,65 @@ def view_listings(request):
         all_listings = all_listings.order_by("-id")  # Note the minus sign
 
     processed_listings = []
-    for listing in all_listings:
+
+    search_lat = request.GET.get("lat")
+    search_lng = request.GET.get("lng")
+    radius = request.GET.get("radius")
+
+    if search_lat and search_lng:
+        try:
+            search_lat = float(search_lat)
+            search_lng = float(search_lng)
+
+            for listing in all_listings:
+                try:
+                    # Extract listing coordinates
+                    listing_lat, listing_lng = extract_coordinates(listing.location)
+
+                    # Calculate distance
+                    distance = calculate_distance(
+                        search_lat, search_lng, listing_lat, listing_lng
+                    )
+
+                    # Add distance to listing object
+                    listing.distance = distance
+
+                    # Only apply radius filter if specified
+                    if radius:
+                        radius = float(radius)
+                        if distance <= radius:
+                            processed_listings.append(listing)
+                    else:
+                        processed_listings.append(listing)
+                except ValueError:
+                    listing.distance = (
+                        None  # Set distance to None if coordinates invalid
+                    )
+                    processed_listings.append(listing)  # Still include the listing
+        except ValueError:
+            error_messages.append("Invalid coordinates provided")
+            processed_listings = list(
+                all_listings
+            )  # Use all listings if coordinates invalid
+    else:
+        # If no location search, process listings normally
+        for listing in all_listings:
+            listing.distance = None  # Set distance to None when no search location
+            processed_listings.append(listing)
+
+    # Sort by distance if we have coordinates
+    if search_lat and search_lng:
+        processed_listings.sort(
+            key=lambda x: x.distance if x.distance is not None else float("inf")
+        )
+
+    # Process availability info for all listings
+    for listing in processed_listings:
         try:
             earliest_slot = listing.slots.earliest("start_date", "start_time")
-            latest_slot = listing.slots.latest("end_date", "end_time")
             listing.available_from = earliest_slot.start_date
             listing.available_time_from = earliest_slot.start_time
+            latest_slot = listing.slots.latest("end_date", "end_time")
             listing.available_until = latest_slot.end_date
             listing.available_time_until = latest_slot.end_time
         except listing.slots.model.DoesNotExist:
@@ -459,17 +514,21 @@ def view_listings(request):
             listing.available_time_from = None
             listing.available_until = None
             listing.available_time_until = None
-        processed_listings.append(listing)
 
+    # Pagination logic
     page_number = request.GET.get("page", 1)
     paginator = Paginator(processed_listings, 10)
     page_obj = paginator.get_page(page_number)
 
+    # Get filter context
     context = {
         "listings": page_obj,
         "half_hour_choices": HALF_HOUR_CHOICES,
         "filter_type": filter_type,
         "max_price": max_price or "",
+        "search_lat": search_lat,
+        "search_lng": search_lng,
+        "radius": radius,
         "start_date": request.GET.get("start_date", ""),
         "end_date": request.GET.get("end_date", ""),
         "start_time": request.GET.get("start_time", ""),
@@ -487,6 +546,7 @@ def view_listings(request):
         "warning_messages": warning_messages,
         "charger_level_choices": EV_CHARGER_LEVELS,
         "connector_type_choices": EV_CONNECTOR_TYPES,
+        "has_active_filters": has_active_filters(request),
     }
 
     if request.GET.get("ajax") == "1":
