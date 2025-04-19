@@ -63,7 +63,7 @@
                             </div>
                             
                             <div class="mb-4">
-                                <label for="id_verification_file" class="form-label">Verification Document (Optional)</label>
+                                <label for="id_verification_file" class="form-label">Verification Document <span class="text-danger">*</span></label>
                                 {{ form.verification_file }}
                                 {% if form.verification_file.errors %}
                                     <div class="text-danger mt-1">{{ form.verification_file.errors }}</div>

@@ -299,7 +299,12 @@ def profile_view(request):
     is_verified = request.user.profile.is_verified
     verification_requested = request.user.profile.verification_requested
 
-    # Render the user's profile page
+    # Add the more specific query
+    pending_verification = VerificationRequest.objects.filter(
+        user=request.user, status="PENDING"
+    ).exists()
+
+    # Pass both to the template
     return render(
         request,
         "accounts/profile.html",
@@ -309,6 +314,7 @@ def profile_view(request):
             "error_message": error_message,
             "is_verified": is_verified,
             "verification_requested": verification_requested,
+            "pending_verification": pending_verification,
         },
     )
 
@@ -535,6 +541,11 @@ def public_profile_view(request, username):
     # Get verification status from profile
     is_verified = hasattr(profile_user, "profile") and profile_user.profile.is_verified
 
+    # Add this check for pending verification
+    pending_verification = VerificationRequest.objects.filter(
+        user=profile_user, status="PENDING"
+    ).exists()
+
     # Calculate average rating across all listings
     from django.db.models import Avg
     from listings.models import Listing, Review
@@ -565,5 +576,6 @@ def public_profile_view(request, username):
             "average_rating": average_rating,
             "listing_count": listing_count,
             "review_count": total_reviews,
+            "pending_verification": pending_verification,
         },
     )

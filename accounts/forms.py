@@ -67,7 +67,7 @@ class VerificationForm(forms.Form):
     )
 
     verification_file = forms.FileField(
-        required=False, widget=forms.FileInput(attrs={"class": "form-control"})
+        required=True, widget=forms.FileInput(attrs={"class": "form-control"})
     )
 
     def clean_verification_file(self):

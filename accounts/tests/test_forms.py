@@ -48,7 +48,13 @@ class VerificationFormTest(TestCase):
             "address": "123 Test Street, New York, NY 10001",
             "phone_number": "+1234567890",
         }
-        form = VerificationForm(data=form_data)
+        # Add the required file
+        file_data = {
+            "verification_file": SimpleUploadedFile(
+                "document.pdf", b"PDF content", content_type="application/pdf"
+            ),
+        }
+        form = VerificationForm(data=form_data, files=file_data)
         self.assertTrue(form.is_valid())
 
     def test_form_valid_with_all_fields(self):

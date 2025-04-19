@@ -9,54 +9,19 @@
                 <li class="nav-item"><a class="nav-link" href="{% url 'view_listings' %}">View Listings</a></li>
                 {% if user.is_authenticated %}
                     <li class="nav-item"><a class="nav-link" href="{% url 'my_bookings' %}">My Bookings</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'create_listing' %}">Post a Spot</a></li>
                     
                     {% if user.profile.is_verified %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'create_listing' %}">Post a Spot</a></li>
                         <li class="nav-item"><a class="nav-link" href="{% url 'manage_listings' %}">Manage My Listings</a></li>
                     {% endif %}
                     
-                    <!-- Profile dropdown with notifications and messages -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle position-relative" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Profile
-                            {% if total_unread_count > 0 %}
-                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                    {{ total_unread_count }}
-                                    <span class="visually-hidden">unread notifications</span>
-                                </span>
-                            {% endif %}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
-                            <li><a class="dropdown-item" href="{% url 'profile' %}">My Profile</a></li>
-                            <li>
-                                <a class="dropdown-item d-flex justify-content-between align-items-center" href="{% url 'inbox' %}">
-                                    Messages
-                                    {% if unread_message_count > 0 %}
-                                        <span class="badge bg-danger rounded-pill ms-2">{{ unread_message_count }}</span>
-                                    {% endif %}
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item d-flex justify-content-between align-items-center" href="{% url 'user_notifications' %}">
-                                    Notifications
-                                    {% if unread_notification_count > 0 %}
-                                        <span class="badge bg-danger rounded-pill ms-2">{{ unread_notification_count }}</span>
-                                    {% endif %}
-                                </a>
-                            </li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
-                        </ul>
-                    </li>
-                    
                     {% if user.is_staff %}
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle position-relative" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <a class="nav-link dropdown-toggle position-relative pe-4" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 Admin
                                 {% if pending_verifications_count > 0 or pending_reports_count > 0 %}
-                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                        {{ pending_verifications_count|add:pending_reports_count }}
-                                        <span class="visually-hidden">pending items</span>
+                                    <span class="position-absolute bg-danger border border-light rounded-circle" style="width: 10px; height: 10px; top: 2px; right: 10px;">
+                                        <span class="visually-hidden">New admin items</span>
                                     </span>
                                 {% endif %}
                             </a>
@@ -84,6 +49,39 @@
                             </ul>
                         </li>
                     {% endif %}
+
+                     <!-- Profile dropdown with notifications and messages -->
+                     <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle position-relative pe-4" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Profile
+                            {% if total_unread_count > 0 %}
+                                <span class="position-absolute bg-danger border border-light rounded-circle" style="width: 10px; height: 10px; top: 2px; right: 10px;">
+                                    <span class="visually-hidden">New notifications</span>
+                                </span>
+                            {% endif %}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+                            <li><a class="dropdown-item" href="{% url 'profile' %}">My Profile</a></li>
+                            <li>
+                                <a class="dropdown-item d-flex justify-content-between align-items-center" href="{% url 'inbox' %}">
+                                    Messages
+                                    {% if unread_message_count > 0 %}
+                                        <span class="badge bg-danger rounded-pill ms-2">{{ unread_message_count }}</span>
+                                    {% endif %}
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex justify-content-between align-items-center" href="{% url 'user_notifications' %}">
+                                    Notifications
+                                    {% if unread_notification_count > 0 %}
+                                        <span class="badge bg-danger rounded-pill ms-2">{{ unread_notification_count }}</span>
+                                    {% endif %}
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
+                        </ul>
+                    </li>
                 {% else %}
                     <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Login</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'register' %}">Register</a></li>
