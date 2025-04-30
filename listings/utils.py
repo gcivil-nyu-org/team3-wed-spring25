@@ -429,3 +429,67 @@ def filter_listings(all_listings, request):
         )
 
     return processed_listings, error_messages, warning_messages
+
+
+def generate_recurring_listing_slots(
+    start_date, start_time, end_time, pattern, is_overnight=False, **kwargs
+):
+    """
+    Generate listing slots based on recurring pattern.
+
+    Args:
+        start_date: The starting date
+        start_time: The start time for each slot
+        end_time: The end time for each slot
+        pattern: Either "daily" or "weekly"
+        is_overnight: Whether slots extend overnight
+        **kwargs: Additional pattern-specific parameters
+            - For daily: end_date required
+            - For weekly: weeks required
+
+    Returns:
+        list: List of dicts with start_date, start_time, end_date, end_time
+    """
+    listing_slots = []
+
+    if pattern == "daily":
+        end_date = kwargs.get("end_date")
+        if not end_date:
+            raise ValueError("End date is required for daily pattern")
+
+        days_count = (end_date - start_date).days + 1
+        for day_offset in range(days_count):
+            current_date = start_date + timedelta(days=day_offset)
+            end_date_for_slot = current_date + timedelta(days=1 if is_overnight else 0)
+
+            listing_slots.append(
+                {
+                    "start_date": current_date,
+                    "start_time": start_time,
+                    "end_date": end_date_for_slot,
+                    "end_time": end_time,
+                }
+            )
+
+    elif pattern == "weekly":
+        weeks = kwargs.get("weeks")
+        if not weeks:
+            raise ValueError("Number of weeks is required for weekly pattern")
+
+        for week_offset in range(weeks):
+            current_date = start_date + timedelta(weeks=week_offset)
+            end_date_for_slot = current_date + timedelta(days=1 if is_overnight else 0)
+
+            listing_slots.append(
+                {
+                    "start_date": current_date,
+                    "start_time": start_time,
+                    "end_date": end_date_for_slot,
+                    "end_time": end_time,
+                }
+            )
+
+    else:
+        raise ValueError(f"Unknown pattern: {pattern}")
+
+    return listing_slots
