@@ -182,13 +182,16 @@ def filter_listings(all_listings, request):
     """
     error_messages = []
     warning_messages = []
-
+    
     # Apply price filter
     max_price = request.GET.get("max_price")
     if max_price:
         try:
             max_price_val = float(max_price)
-            all_listings = all_listings.filter(rent_per_hour__lte=max_price_val)
+            if max_price_val <= 0:
+                error_messages.append("Maximum price must be positive.")
+            else:
+                all_listings = all_listings.filter(rent_per_hour__lte=max_price_val)
         except ValueError:
             pass
 
@@ -200,21 +203,160 @@ def filter_listings(all_listings, request):
         end_date = request.GET.get("end_date")
         start_time = request.GET.get("start_time")
         end_time = request.GET.get("end_time")
+        print("Start date:", start_date)
+        print("End date:", end_date)
+        print("Start time:", start_time)
+        print("End time:", end_time)
 
-        if any([start_date, end_date, start_time, end_time]):
+        # Validate date combinations
+        if start_date and end_date:
             try:
-                user_start_str = f"{start_date} {start_time}"
-                user_end_str = f"{end_date} {end_time}"
-                user_start_dt = datetime.strptime(user_start_str, "%Y-%m-%d %H:%M")
-                user_end_dt = datetime.strptime(user_end_str, "%Y-%m-%d %H:%M")
-
-                filtered = []
-                for listing in all_listings:
-                    if listing.is_available_for_range(user_start_dt, user_end_dt):
-                        filtered.append(listing)
-                all_listings = filtered
+                start_date_obj = datetime.strptime(start_date, "%Y-%m-%d").date()
+                end_date_obj = datetime.strptime(end_date, "%Y-%m-%d").date()
+                if start_date_obj > end_date_obj:
+                    error_messages.append("Start date cannot be after end date.")
+                    start_date = end_date  # Use equal dates to avoid further errors
             except ValueError:
-                pass
+                error_messages.append("Invalid date format.")
+        
+        # Handle single-field cases first
+        if any([start_date, end_date, start_time, end_time]):
+            filtered = []
+            for listing in all_listings:
+                include = True
+                
+                # Individual filter logic                
+                if start_date and not (end_date or start_time or end_time):
+                    # Only start date filter
+                    try:
+                        start_date_obj = datetime.strptime(start_date, "%Y-%m-%d").date()
+                        if not listing.has_availability_after_date(start_date_obj):
+                            include = False
+                    except ValueError:
+                        pass
+                        
+                elif end_date and not (start_date or start_time or end_time):
+                    # Only end date filter
+                    try:
+                        end_date_obj = datetime.strptime(end_date, "%Y-%m-%d").date()
+                        if not listing.has_availability_before_date(end_date_obj):
+                            include = False
+                    except ValueError:
+                        pass
+                        
+                elif start_time and not (start_date or end_date or end_time):
+                    # Only start time filter
+                    try:
+                        start_time_obj = datetime.strptime(start_time, "%H:%M").time()
+                        if not listing.has_availability_after_time(start_time_obj):
+                            include = False
+                    except ValueError:
+                        pass
+                        
+                elif end_time and not (start_date or end_date or start_time):
+                    # Only end time filter
+                    try:
+                        end_time_obj = datetime.strptime(end_time, "%H:%M").time()
+                        if not listing.has_availability_before_time(end_time_obj):
+                            include = False
+                    except ValueError:
+                        pass
+                
+                # All combinations for full date range search
+                elif all([start_date, end_date, start_time, end_time]):
+                    # Full range search
+                    try:
+                        user_start_dt = datetime.strptime(f"{start_date} {start_time}", "%Y-%m-%d %H:%M")
+                        user_end_dt = datetime.strptime(f"{end_date} {end_time}", "%Y-%m-%d %H:%M")
+                        if not listing.is_available_for_range(user_start_dt, user_end_dt):
+                            include = False
+                    except ValueError:
+                        pass
+                
+                # Various combinations of date and time
+                else:
+                    try:
+                        # Combine the available parameters
+                        s_date = datetime.strptime(start_date, "%Y-%m-%d").date() if start_date else None
+                        e_date = datetime.strptime(end_date, "%Y-%m-%d").date() if end_date else None
+                        s_time = datetime.strptime(start_time, "%H:%M").time() if start_time else None
+                        e_time = datetime.strptime(end_time, "%H:%M").time() if end_time else None
+                        
+                        # Create datetime range or partial ranges
+                        if s_date and s_time and e_date:
+                            # Start date/time to end date
+                            s_dt = datetime.combine(s_date, s_time)
+                            e_dt = datetime.combine(e_date, time(23, 59))
+                            if not listing.is_available_for_range(s_dt, e_dt):
+                                include = False
+                                
+                        elif s_date and e_date and e_time:
+                            # Start date to end date/time
+                            s_dt = datetime.combine(s_date, time(0, 0))
+                            e_dt = datetime.combine(e_date, e_time)
+                            if not listing.is_available_for_range(s_dt, e_dt):
+                                include = False
+                                
+                        elif s_date and s_time and e_time:
+                            # Start date with specific time range
+                            s_dt = datetime.combine(s_date, s_time)
+                            e_dt = datetime.combine(s_date, e_time)
+                            if not listing.is_available_for_range(s_dt, e_dt):
+                                include = False
+                                
+                        elif e_date and s_time and e_time:
+                            # End date with specific time range
+                            s_dt = datetime.combine(e_date, s_time)
+                            e_dt = datetime.combine(e_date, e_time)
+                            if not listing.is_available_for_range(s_dt, e_dt):
+                                include = False
+
+                        elif s_date and s_time:
+                            # Start date with specific time
+                            s_dt = datetime.combine(s_date, s_time)
+                                
+                        elif s_date and e_time:
+                            # Start date ending at specific time
+                            s_dt = datetime.combine(s_date, time(0, 0))
+                            e_dt = datetime.combine(s_date, e_time)
+                            if not listing.is_available_for_range(s_dt, e_dt):
+                                include = False
+                                
+                        elif e_date and s_time:
+                            # End date starting at specific time
+                            s_dt = datetime.combine(e_date, s_time)
+                            e_dt = datetime.combine(e_date, time(23, 59))
+                            if not listing.is_available_for_range(s_dt, e_dt):
+                                include = False
+                                
+                        elif s_date and e_date:
+                            # Just date range
+                            s_dt = datetime.combine(s_date, time(0, 0))
+                            e_dt = datetime.combine(e_date, time(23, 59))
+                            if not listing.is_available_for_range(s_dt, e_dt):
+                                include = False
+                    except ValueError:
+                        pass
+                        
+                if include:
+                    filtered.append(listing)
+                    
+            all_listings = filtered
+
+        # if any([start_date, end_date, start_time, end_time]):
+        #     try:
+        #         user_start_str = f"{start_date} {start_time}"
+        #         user_end_str = f"{end_date} {end_time}"
+        #         user_start_dt = datetime.strptime(user_start_str, "%Y-%m-%d %H:%M")
+        #         user_end_dt = datetime.strptime(user_end_str, "%Y-%m-%d %H:%M")
+
+        #         filtered = []
+        #         for listing in all_listings:
+        #             if listing.is_available_for_range(user_start_dt, user_end_dt):
+        #                 filtered.append(listing)
+        #         all_listings = filtered
+        #     except ValueError:
+        #         pass
 
     # Multiple date/time ranges filter
     elif filter_type == "multiple":
@@ -390,9 +532,18 @@ def filter_listings(all_listings, request):
 
     # Apply location-based filtering
     processed_listings = []
+
+    location = request.GET.get("location")
     search_lat = request.GET.get("lat")
     search_lng = request.GET.get("lng")
     radius = request.GET.get("radius")
+
+    if location and not (search_lat and search_lng):
+        error_messages.append("Location could not be found. Please select a valid location.")
+
+    if radius and not (search_lat and search_lng):
+        error_messages.append("Distance filtering requires a location to be selected.")
+        radius = None  # Ignore radius if no location
 
     if search_lat and search_lng:
         try:
