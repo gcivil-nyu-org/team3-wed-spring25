@@ -208,6 +208,22 @@ class Listing(models.Model):
         verbose_name="Parking Spot Size",
     )
 
+    def has_availability_after_date(self, date):
+        """Check if listing has any availability on or after the specified date"""
+        return self.slots.filter(end_date__gte=date).exists()
+    
+    def has_availability_before_date(self, date):
+        """Check if listing has any availability on or before the specified date"""
+        return self.slots.filter(start_date__lte=date).exists()
+
+    def has_availability_after_time(self, time_obj):
+        """Check if listing has any availability starting at or after the specified time"""
+        return self.slots.filter(start_time__gte=time_obj).exists()
+    
+    def has_availability_before_time(self, time_obj):
+        """Check if listing has any availability ending at or before the specified time"""
+        return self.slots.filter(end_time__lte=time_obj).exists()
+
 
 class ListingSlot(models.Model):
     listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="slots")
