@@ -379,7 +379,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   setupAdvancedFilters();
   setupRadiusToggle();
-  setupDateSyncForSingleBooking();
   initializeDateRangeToggle();
   initializeEvChargerToggle();
   initializeRecurringPatternToggle();

@@ -57,21 +57,10 @@ function initializeMultipleDaysToggle() {
       // Multiple days selected
       singleDateContainer.style.display = 'none';
       multipleDaysContainer.style.display = 'flex';
-      
-      // Copy single date to multi start date when switching
-      if (singleStartDate.value) {
-        multiStartDate.value = singleStartDate.value;
-        // multiEndDate.value = singleStartDate.value;
-      }
     } else {
       // Single day selected
       singleDateContainer.style.display = 'block';
       multipleDaysContainer.style.display = 'none';
-      
-      // Copy multi start date to single date when switching
-      if (multiStartDate.value) {
-        singleStartDate.value = multiStartDate.value;
-      }
     }
     updateHiddenInputs();
   });
@@ -417,24 +406,6 @@ function initializePopover() {
   var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
     return new bootstrap.Popover(popoverTriggerEl);
   });
-}
-
-function setupDateSyncForSingleBooking() {
-  const singleStartDate = document.getElementById("single_start_date");
-  const singleEndDate = document.getElementById("single_end_date");
-
-  if (singleStartDate && singleEndDate) {
-    // Set end date to match start date initially
-    if (singleStartDate.value) {
-      singleEndDate.value = singleStartDate.value;
-    }
-
-    // Update end date whenever start date changes
-    singleStartDate.addEventListener("change", function () {
-      singleEndDate.value = this.value;
-      console.log("Synced end date with start date:", this.value);
-    });
-  }
 }
 
 // Separate function to generate popup HTML

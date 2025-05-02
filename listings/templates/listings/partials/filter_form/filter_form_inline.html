@@ -149,7 +149,6 @@
                       <div id="single-date-container" style="display: {% if multiple_days %}none{% else %}block{% endif %};">
                         <input type="date" class="form-control form-control-sm" name="start_date_single" id="single_start_date" value="{{ start_date }}">
                       </div>
-                      <input type="hidden" name="end_date_single" id="single_end_date" value="{{ start_date }}">
                       
                       <!-- Multiple days inputs -->
                       <div id="multiple-days-container" class="row g-0" style="display: {% if multiple_days %}flex{% else %}none{% endif %};">
@@ -157,13 +156,13 @@
                           <input type="date" class="form-control form-control-sm" placeholder="Start" name="start_date_multi" id="multi_start_date" value="{{ start_date }}">
                         </div>
                         <div class="col-6 ps-1">
-                          <input type="date" class="form-control form-control-sm" placeholder="End" name="end_date_multi" id="multi_end_date" value="{{ end_date|default:start_date }}">
+                          <input type="date" class="form-control form-control-sm" placeholder="End" name="end_date_multi" id="multi_end_date">
                         </div>
                       </div>
                       
                       <!-- Hidden inputs that will always be submitted -->
                       <input type="hidden" name="start_date" id="real_start_date" value="{{ start_date }}">
-                      <input type="hidden" name="end_date" id="real_end_date" value="{% if multiple_days %}{{ end_date|default:start_date }}{% else %}{{ start_date }}{% endif %}">
+                      <input type="hidden" name="end_date" id="real_end_date" value="{{ end_date }}">
                     </div>
                     
                     <!-- Start Time -->

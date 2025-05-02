@@ -242,10 +242,10 @@ def filter_listings(all_listings, request):
         # Get time values (these names are consistent)
         start_time = request.GET.get("start_time")
         end_time = request.GET.get("end_time")
-        # print("Start date:", start_date)
-        # print("End date:", end_date)
-        # print("Start time:", start_time)
-        # print("End time:", end_time)
+        print("Start date:", start_date)
+        print("End date:", end_date)
+        print("Start time:", start_time)
+        print("End time:", end_time)
 
         # Validate date combinations
         if start_date and end_date:
