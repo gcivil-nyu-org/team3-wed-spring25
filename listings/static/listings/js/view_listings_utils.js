@@ -61,7 +61,7 @@ function initializeMultipleDaysToggle() {
       // Copy single date to multi start date when switching
       if (singleStartDate.value) {
         multiStartDate.value = singleStartDate.value;
-        multiEndDate.value = singleStartDate.value;
+        // multiEndDate.value = singleStartDate.value;
       }
     } else {
       // Single day selected
