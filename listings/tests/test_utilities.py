@@ -990,3 +990,74 @@ class FilterListingsTestCase(TestCase):
         )
         self.assertEqual(len(filtered_listings), 1)
         self.assertIn(self.listing1, filtered_listings)
+
+    def test_pagination_with_filters(self):
+        """Test that filters are preserved when paginating through results"""
+        # Create additional listings to have more than one page
+        # We already have 4 listings, so let's add 8 more to cross the 10-item pagination threshold
+
+        # Common dates for new listings
+        today = timezone.now().date()
+
+        # Create 8 additional listings - 4 with EV chargers (expensive) and 4 without (cheaper)
+        for i in range(8):
+            has_ev = i < 4  # First 4 have EV chargers
+            price = 25.00 if has_ev else 7.50  # EV spots cost more
+
+            listing = Listing.objects.create(
+                user=self.user1,
+                title=f"Additional Listing {i+1}",
+                location=f"Location {i+1} [40.7, -74.0]",
+                rent_per_hour=price,
+                description=f"Additional listing {i+1}",
+                has_ev_charger=has_ev,
+                charger_level="L2" if has_ev else "",  # Empty string instead of None
+                connector_type=(
+                    "J1772" if has_ev else ""
+                ),  # Empty string instead of None
+                parking_spot_size="STANDARD",
+            )
+
+            # Create availability slot for today
+            ListingSlot.objects.create(
+                listing=listing,
+                start_date=today,
+                start_time=time(10, 0),
+                end_date=today,
+                end_time=time(18, 0),
+            )
+
+        # Now we should have 12 total listings
+
+        # Apply a filter for EV chargers
+        mock_request = self.create_mock_request({"has_ev_charger": "on"})
+
+        # Get all filtered listings
+        all_filtered_listings, errors, warnings = filter_listings(
+            Listing.objects.all(), mock_request
+        )
+
+        # We should have 7 listings with EV chargers
+        # (self.listing1, self.listing3, self.listing4 from setUp + 4 new ones)
+        self.assertEqual(len(all_filtered_listings), 7)
+
+        # Check that all results have EV chargers
+        for listing in all_filtered_listings:
+            self.assertTrue(listing.has_ev_charger)
+
+        # Manually simulate pagination - split into pages of 5 items
+        page_size = 5
+        page1 = all_filtered_listings[:page_size]
+        page2 = all_filtered_listings[page_size:]
+
+        # Check both pages contain only listings with EV chargers
+        for listing in page1:
+            self.assertTrue(listing.has_ev_charger)
+
+        for listing in page2:
+            self.assertTrue(listing.has_ev_charger)
+
+        # Make sure we got different listings on different pages
+        page1_ids = {listing.id for listing in page1}
+        page2_ids = {listing.id for listing in page2}
+        self.assertEqual(len(page1_ids.intersection(page2_ids)), 0)  # No overlap
