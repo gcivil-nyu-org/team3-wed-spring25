@@ -27,13 +27,19 @@ document.addEventListener("DOMContentLoaded", function () {
     // Map click handler function
     function onMapClick(e) {
       console.log("Map clicked at:", e.latlng);
+
+      // Clear any existing error messages first
+      clearLocationErrorMessage();
+
       if (marker) {
         map.removeLayer(marker);
       }
-      marker = L.marker(e.latlng).addTo(map);
 
       // Verify the clicked point is within NYC bounds
       if (isWithinNYC(e.latlng.lat, e.latlng.lng)) {
+        // Create marker at the clicked location
+        marker = L.marker(e.latlng).addTo(map);
+
         // Reverse geocode with Nominatim
         reverseGeocode(e.latlng.lat, e.latlng.lng, {
           onSuccess: (result) => {
@@ -50,8 +56,10 @@ document.addEventListener("DOMContentLoaded", function () {
           },
         });
       } else {
-        map.removeLayer(marker);
-        alert("Please select a location within New York City.");
+        // Instead of alert, show inline error message
+        showLocationErrorMessage(
+          "Please select a location within New York City."
+        );
       }
     }
     map.on("click", onMapClick);

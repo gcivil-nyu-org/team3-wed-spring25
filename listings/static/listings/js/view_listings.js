@@ -467,6 +467,16 @@ function performSearch() {
 
   if (!query) return;
 
+  // Clear any existing error messages before search
+  clearFilterLocationError();
+
+  // Show loading indicator on search button
+  const searchButton = document.getElementById("search-location");
+  if (searchButton) {
+    searchButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    searchButton.disabled = true;
+  }
+
   // Use the utility function
   searchLocation(query, {
     restrictToNYC: true,
@@ -505,6 +515,46 @@ function performSearch() {
       setTimeout(() => {
         searchMap.invalidateSize();
       }, 100);
+
+      // Reset search button
+      if (searchButton) {
+        searchButton.innerHTML = '<i class="fas fa-map-pin"></i>';
+        searchButton.disabled = false;
+      }
+    },
+    onOutOfBounds: () => {
+      showFilterLocationError(
+        "Location is outside of New York City. Please search for a location within NYC."
+      );
+
+      // Reset search button
+      if (searchButton) {
+        searchButton.innerHTML = '<i class="fas fa-map-pin"></i>';
+        searchButton.disabled = false;
+      }
+    },
+    onNotFound: () => {
+      showFilterLocationError(
+        "Location not found. Please try a different search term."
+      );
+
+      // Reset search button
+      if (searchButton) {
+        searchButton.innerHTML = '<i class="fas fa-map-pin"></i>';
+        searchButton.disabled = false;
+      }
+    },
+    onError: (error) => {
+      showFilterLocationError(
+        "Error searching for location. Please try again."
+      );
+      console.error("Search error:", error);
+
+      // Reset search button
+      if (searchButton) {
+        searchButton.innerHTML = '<i class="fas fa-map-pin"></i>';
+        searchButton.disabled = false;
+      }
     },
   });
 }
