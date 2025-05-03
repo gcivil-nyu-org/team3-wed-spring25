@@ -229,23 +229,32 @@ def filter_listings(all_listings, request):
         start_date = request.GET.get("start_date") or request.GET.get("real_start_date")
         end_date = request.GET.get("end_date") or request.GET.get("real_end_date")
 
-        # If we still don't have dates, try the form-specific fields
+        # If we still don't have dates, check if multi-day toggle is enabled
+        multiple_days = request.GET.get("multiple_days") == "on"
+
         if not start_date:
-            start_date = request.GET.get("start_date_single") or request.GET.get(
-                "start_date_multi"
-            )
+            if multiple_days:
+                # Multi-day mode: use multi fields
+                start_date = request.GET.get("start_date_multi")
+            else:
+                # Single-day mode: use single field
+                start_date = request.GET.get("start_date_single")
+
         if not end_date:
-            end_date = request.GET.get("end_date_single") or request.GET.get(
-                "end_date_multi"
-            )
+            if multiple_days:
+                # Multi-day mode: use multi end date
+                end_date = request.GET.get("end_date_multi")
+            else:
+                # Single-day mode: end date equals start date
+                end_date = request.GET.get("start_date_single")
 
         # Get time values (these names are consistent)
         start_time = request.GET.get("start_time")
         end_time = request.GET.get("end_time")
-        print("Start date:", start_date)
-        print("End date:", end_date)
-        print("Start time:", start_time)
-        print("End time:", end_time)
+        # print("Start date:", start_date)
+        # print("End date:", end_date)
+        # print("Start time:", start_time)
+        # print("End time:", end_time)
 
         # Validate date combinations
         if start_date and end_date:
