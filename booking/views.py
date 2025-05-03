@@ -76,6 +76,31 @@ def available_times(request):
             valid_times.add(current_dt.strftime("%H:%M"))
             current_dt += dt.timedelta(minutes=30)
     times = sorted(valid_times)
+
+    # Filter out past times for today's date
+    today = dt.date.today()
+    if booking_date == today:
+        # Get current time
+        now = dt.datetime.now()
+
+        # Calculate the next available time slot
+        current_minutes = now.minute
+        current_hour = now.hour
+
+        # Round up to the nearest half hour
+        if current_minutes < 30:
+            next_slot_minutes = 30
+            next_slot_hour = current_hour
+        else:
+            next_slot_minutes = 0
+            next_slot_hour = current_hour + 1
+
+        # Format as HH:MM string
+        next_slot_str = f"{next_slot_hour:02d}:{next_slot_minutes:02d}"
+
+        # Filter out times before the next valid slot
+        times = [t for t in times if t >= next_slot_str]
+
     if max_time_str:
         times = [t for t in times if t <= max_time_str]
     if min_time_str:

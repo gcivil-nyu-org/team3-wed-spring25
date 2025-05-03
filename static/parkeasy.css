@@ -460,11 +460,13 @@ button.btn-primary.active {
 .rating-stars-sm {
     display: inline-flex;
     align-items: center;
+    font-family: 'Courier New', Courier, monospace;
     font-size: 1rem;
 }
 
 .rating-stars-sm::before {
     content: "☆☆☆☆☆";
+    font-family: 'Courier New', Courier, monospace;
     color: #ddd;
 }
 
