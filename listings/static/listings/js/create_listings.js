@@ -570,7 +570,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (addSlotBtn) addSlotBtn.style.display = 'none';
       
       // Update the button
-      toggleRecurringBtn.innerHTML = '<i class="fas fa-calendar-day me-1"></i> Single Availability';
+      toggleRecurringBtn.innerHTML = '<i class="fas fa-calendar-day me-1"></i> One-Time Slots';
       toggleRecurringBtn.classList.remove('btn-outline-primary');
       toggleRecurringBtn.classList.add('btn-outline-secondary');
       
@@ -607,7 +607,7 @@ document.addEventListener("DOMContentLoaded", function () {
         recurringPatternContainer.style.display = 'block';
         slotFormsContainer.style.display = 'none'; // Hide all slot forms
         addSlotBtn.style.display = 'none';
-        toggleRecurringBtn.innerHTML = '<i class="fas fa-calendar-day me-1"></i> Single Availability';
+        toggleRecurringBtn.innerHTML = '<i class="fas fa-calendar-day me-1"></i> One-Time Slots';
         toggleRecurringBtn.classList.replace('btn-outline-primary', 'btn-outline-secondary');
         isRecurringField.value = 'true';
         
