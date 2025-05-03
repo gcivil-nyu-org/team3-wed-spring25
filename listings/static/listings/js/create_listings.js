@@ -676,7 +676,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // Update the button
       toggleRecurringBtn.innerHTML =
-        '<i class="fas fa-calendar-day me-1"></i> Single Availability';
+        '<i class="fas fa-calendar-day me-1"></i> One-Time Slots';
       toggleRecurringBtn.classList.remove("btn-outline-primary");
       toggleRecurringBtn.classList.add("btn-outline-secondary");
 
@@ -715,7 +715,7 @@ document.addEventListener("DOMContentLoaded", function () {
         slotFormsContainer.style.display = "none"; // Hide all slot forms
         addSlotBtn.style.display = "none";
         toggleRecurringBtn.innerHTML =
-          '<i class="fas fa-calendar-day me-1"></i> Single Availability';
+          '<i class="fas fa-calendar-day me-1"></i> One-Time Slots';
         toggleRecurringBtn.classList.replace(
           "btn-outline-primary",
           "btn-outline-secondary"

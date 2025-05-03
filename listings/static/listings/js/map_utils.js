@@ -24,8 +24,9 @@ function initializeNYCMap(mapElementId, options = {}) {
   const map = L.map(mapElementId, {
     center: options.center || NYC_CENTER,
     zoom: options.zoom || 11,
-    maxBounds: NYC_LEAFLET_BOUNDS,
-    minZoom: options.minZoom || 10,
+    minZoom: options.minZoom || 3,
+    maxBounds: NYC_LEAFLET_BOUNDS, // Add maxBounds to restrict dragging to NYC area
+    maxBoundsViscosity: 0.9, // How "hard" the bounds are enforced (0-1)
     ...options,
   });
 
@@ -34,9 +35,6 @@ function initializeNYCMap(mapElementId, options = {}) {
     attribution:
       '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
   }).addTo(map);
-
-  // Set max bounds with padding to prevent scrolling too far outside NYC
-  map.setMaxBounds(map.getBounds().pad(0.1));
 
   return map;
 }

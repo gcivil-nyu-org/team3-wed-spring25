@@ -1145,7 +1145,9 @@ class ListingOwnerBookingTest(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Your listing")
-        self.assertContains(response, 'class="badge bg-secondary outline-badge"')
+        self.assertContains(
+            response, 'class="badge bg-secondary outline-badge text-decoration-none"'
+        )
         book_url = reverse("book_listing", args=[self.listing.id])
         self.assertNotContains(response, f'href="{book_url}"')
         self.assertNotContains(response, "Book Now")
