@@ -77,15 +77,27 @@ function searchLocation(query, options = {}) {
   const defaultOptions = {
     restrictToNYC: true,
     onSuccess: () => {},
-    onOutOfBounds: () =>
-      alert(
-        "Location is outside of New York City. Please search for a location within NYC."
-      ),
-    onNotFound: () =>
-      alert("Location not found. Please try a different search term."),
+    onOutOfBounds: () => {
+      console.warn("Location is outside of New York City.");
+      return {
+        error: true,
+        message:
+          "Location is outside of New York City. Please search for a location within NYC.",
+      };
+    },
+    onNotFound: () => {
+      console.warn("Location not found.");
+      return {
+        error: true,
+        message: "Location not found. Please try a different search term.",
+      };
+    },
     onError: (error) => {
       console.error("Search error:", error);
-      alert("Error searching for location. Please try again.");
+      return {
+        error: true,
+        message: "Error searching for location. Please try again.",
+      };
     },
   };
 
@@ -150,7 +162,8 @@ function searchLocation(query, options = {}) {
           displayName: "Times Square, Manhattan, NYC",
         };
 
-        alert(
+        // Only show error in console, not alert
+        console.warn(
           "Location search is currently unavailable. Using a default NYC location."
         );
         mergedOptions.onSuccess(fallbackLocation);
