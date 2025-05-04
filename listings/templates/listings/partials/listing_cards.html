@@ -14,10 +14,13 @@
     <a href="{% url 'report_item' 'listing' listing.id %}" class="report-icon" title="Report this listing">
       <i class="fas fa-flag"></i>
     </a>
+
+    {% if user.is_authenticated %}
     <a href="{% url 'toggle_bookmark' listing.id %}"
        class="bookmark-icon ajax-bookmark {% if listing.id in bookmarked_listings or is_bookmarks_page %}active{% endif %}">
       <i class="{% if listing.id in bookmarked_listings or is_bookmarks_page %}fas{% else %}far{% endif %} fa-bookmark"></i>
     </a>
+    {% endif %}
     {% endif %}
 
     <div class="card-body p-2">
