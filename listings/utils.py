@@ -586,14 +586,19 @@ def filter_listings(all_listings, request):
         overnight = request.GET.get("recurring_overnight") == "on"
         continue_with_filter = True
 
-        if not r_start_date or not r_start_time or not r_end_time:
+        has_any_recurring = bool(r_start_date) or bool(r_start_time) or bool(r_end_time)
+        has_all_recurring = (
+            bool(r_start_date) and bool(r_start_time) and bool(r_end_time)
+        )
+
+        if has_any_recurring and not has_all_recurring:
             error_messages.append(
-                "Start date, start time, and end time are required for recurring bookings"
+                "Start date, start time, and end time are all required for recurring bookings"
             )
             continue_with_filter = False
             all_listings = all_listings.none()
 
-        if r_start_date and r_start_time and r_end_time:
+        if has_all_recurring:
             try:
                 intervals = []
                 start_date_obj = parse_date_safely(r_start_date)
