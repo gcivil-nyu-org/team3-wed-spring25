@@ -30,13 +30,6 @@
 
         <!-- Bottom left: List view panel -->
         <div id="list-panel">
-            <div class="panel-header position-sticky" style="top: 0; z-index: 10; background-color: #f8f9fa;">
-                <h5 class="mb-0">Available Parking Spots</h5>
-                <a href="{% url 'create_listing' %}" class="btn btn-accent btn-sm">
-                    <i class="fas fa-plus me-1"></i> Create a new listing
-                </a>
-            </div>
-
             <div id="list-view-container" style="height: calc(100% - 41px); overflow-y: auto;">
                 <div id="list-view" class="view-container listings-container active-view">
                     {% include "listings/partials/listing_cards.html" with listing=listing %}
